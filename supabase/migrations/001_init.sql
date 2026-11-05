@@ -55,9 +55,9 @@ create policy "Users can view catches on their trips"
   to authenticated
   using (
     exists (
-      select 1 from public.fryselogg_trips
-      where trips.id = catches.trip_id
-        and trips.user_id = auth.uid()
+      select 1 from public.fryselogg_trips t
+      where t.id = fryselogg_catches.trip_id
+        and t.user_id = auth.uid()
     )
   );
 
@@ -66,9 +66,9 @@ create policy "Users can insert catches on their trips"
   to authenticated
   with check (
     exists (
-      select 1 from public.fryselogg_trips
-      where trips.id = catches.trip_id
-        and trips.user_id = auth.uid()
+      select 1 from public.fryselogg_trips t
+      where t.id = fryselogg_catches.trip_id
+        and t.user_id = auth.uid()
     )
   );
 
@@ -77,16 +77,16 @@ create policy "Users can update catches on their trips"
   to authenticated
   using (
     exists (
-      select 1 from public.fryselogg_trips
-      where trips.id = catches.trip_id
-        and trips.user_id = auth.uid()
+      select 1 from public.fryselogg_trips t
+      where t.id = fryselogg_catches.trip_id
+        and t.user_id = auth.uid()
     )
   )
   with check (
     exists (
-      select 1 from public.fryselogg_trips
-      where trips.id = catches.trip_id
-        and trips.user_id = auth.uid()
+      select 1 from public.fryselogg_trips t
+      where t.id = fryselogg_catches.trip_id
+        and t.user_id = auth.uid()
     )
   );
 
@@ -95,8 +95,8 @@ create policy "Users can delete catches on their trips"
   to authenticated
   using (
     exists (
-      select 1 from public.fryselogg_trips
-      where trips.id = catches.trip_id
-        and trips.user_id = auth.uid()
+      select 1 from public.fryselogg_trips t
+      where t.id = fryselogg_catches.trip_id
+        and t.user_id = auth.uid()
     )
   );

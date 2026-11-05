@@ -35,3 +35,19 @@ GitHub Pages is set up via `.github/workflows/deploy.yml`. The workflow needs th
 
 - `fryselogg_trips`: `id`, `user_id`, `boat`, `started_at`, `ended_at`, `notes`, `created_at`
 - `fryselogg_catches`: `id`, `trip_id` (FK to `fryselogg_trips`), `species`, `quantity`, `unit`, `location`, `caught_at`, `temperature`, `notes`, `created_at`
+
+## Supabase project
+
+- Project name: `fryselogg`
+- Region: `eu-north-1` (Stockholm)
+- API URL: `https://djnyhyizmbieontyhalb.supabase.co`
+- Dashboard: https://supabase.com/dashboard/project/djnyhyizmbieontyhalb
+- Tables: `fryselogg_trips`, `fryselogg_catches` (RLS enabled; users only see their own rows)
+- Auth: email and password (Supabase Auth)
+
+This project is dedicated to Fryselogg and does not share a database with any other app.
+
+After signup, confirm your email if Supabase asks for it. For the live site, add this URL under Authentication → URL Configuration:
+
+- Site URL: `https://haraldsandvik98-cpu.github.io/fryselogg/`
+- Redirect URLs: `https://haraldsandvik98-cpu.github.io/fryselogg/**` and `http://localhost:5173/**`
