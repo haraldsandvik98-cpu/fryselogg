@@ -96,15 +96,18 @@ export default function App() {
   const loadTrips = async () => {
     if (!supabase || !session) return;
     const { data, error } = await supabase
-      .from("trips")
-      .select("*, catches(*)")
+      .from("fryselogg_trips")
+      .select("*, fryselogg_catches(*)")
       .order("created_at", { ascending: false });
     if (error) {
       setDataError(t(lang, "loadError") + " " + error.message);
       return;
     }
     setDataError("");
-    setTrips(data || []);
+    setTrips((data || []).map((trip) => ({
+      ...trip,
+      catches: trip.fryselogg_catches || trip.catches || []
+    })));
   };
 
   useEffect(() => {
@@ -134,7 +137,7 @@ export default function App() {
   const startTrip = async () => {
     if (!supabase || !session) return;
     setBusy(true);
-    const { error } = await supabase.from("trips").insert({
+    const { error } = await supabase.from("fryselogg_trips").insert({
       user_id: session.user.id,
       boat: boat.trim() || null,
       notes: tripNotes.trim() || null,
@@ -156,7 +159,7 @@ export default function App() {
     const qty = Number(quantity);
     if (!species.trim() || !qty || qty <= 0) return;
     setBusy(true);
-    const { error } = await supabase.from("catches").insert({
+    const { error } = await supabase.from("fryselogg_catches").insert({
       trip_id: active.id,
       species: species.trim(),
       quantity: qty,
@@ -181,7 +184,7 @@ export default function App() {
 
   const deleteCatch = async (id) => {
     if (!supabase || !window.confirm(t(lang, "confirmDelete"))) return;
-    const { error } = await supabase.from("catches").delete().eq("id", id);
+    const { error } = await supabase.from("fryselogg_catches").delete().eq("id", id);
     if (error) {
       setDataError(t(lang, "saveError") + " " + error.message);
       return;
@@ -192,7 +195,7 @@ export default function App() {
   const endTrip = async () => {
     if (!supabase || !active || !window.confirm(t(lang, "confirmEnd"))) return;
     const { error } = await supabase
-      .from("trips")
+      .from("fryselogg_trips")
       .update({ ended_at: new Date().toISOString() })
       .eq("id", active.id);
     if (error) {

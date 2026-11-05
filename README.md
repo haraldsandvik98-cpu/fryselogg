@@ -33,5 +33,5 @@ GitHub Pages is set up via `.github/workflows/deploy.yml`. The workflow needs th
 
 ## Schema
 
-- `trips`: `id`, `user_id`, `boat`, `started_at`, `ended_at`, `notes`, `created_at`
-- `catches`: `id`, `trip_id` (FK to `trips`), `species`, `quantity`, `unit`, `location`, `caught_at`, `temperature`, `notes`, `created_at`
+- `fryselogg_trips`: `id`, `user_id`, `boat`, `started_at`, `ended_at`, `notes`, `created_at`
+- `fryselogg_catches`: `id`, `trip_id` (FK to `fryselogg_trips`), `species`, `quantity`, `unit`, `location`, `caught_at`, `temperature`, `notes`, `created_at`
