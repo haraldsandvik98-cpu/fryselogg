@@ -1,0 +1,15 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { emptySettings, validateSettings, settingsKey, loadSettings, saveSettings } from "./freezerSettings.js";
+const good = () => ({ freezerCount: "2", averageBlockKg: "12,5", blocks: ["0", "42"] });
+const memory = () => { const data = new Map(); return { getItem: k => data.get(k) ?? null, setItem: (k, v) => data.set(k, v) }; };
+test("empty configuration has no invented boat values", () => assert.deepEqual(loadSettings(memory(), "a"), {value: emptySettings(), error: null}));
+test("normalizes comma decimals and integer counts", () => assert.deepEqual(validateSettings(good()), {freezerCount: 2, averageBlockKg: 12.5, blocks: [0,42]}));
+test("rejects invalid freezer counts", () => { for (const n of ["",0,-1,1.5,101,"Infinity","1e1"]) assert.throws(() => validateSettings({...good(),freezerCount:n}), /freezerCountInvalid/); });
+test("rejects nonpositive/nonfinite/malformed kg", () => { for (const n of ["",0,-1,"Infinity","NaN","1,2,3","2kg"]) assert.throws(() => validateSettings({...good(),averageBlockKg:n}), /blockWeightInvalid/); });
+test("rejects negative, fractional, missing or unsafe block counts", () => { for (const blocks of [[-1,0],[1.2,0],["",0],[0],[Number.MAX_SAFE_INTEGER+1,0]]) assert.throws(() => validateSettings({...good(),blocks}), /blockCountsInvalid/); });
+test("save/load survives reload and separates users", () => { const storage=memory(); saveSettings(storage,"a",good()); assert.deepEqual(loadSettings(storage,"a").value,validateSettings(good())); assert.deepEqual(loadSettings(storage,"b").value,emptySettings()); assert.notEqual(settingsKey("a"),settingsKey("b")); assert.throws(() => settingsKey("")); });
+test("reduction retains hidden counts across persistence", () => { const storage=memory(); saveSettings(storage,"a",{...good(),freezerCount:1}); const loaded=loadSettings(storage,"a").value; assert.deepEqual(loaded.blocks,[0,42]); assert.deepEqual(validateSettings({...loaded,freezerCount:2}).blocks,[0,42]); });
+test("malformed or invalid stored values give safe recoverable empty state", () => { for (const raw of ["{","null",'{}','{"freezerCount":2}']) { const storage=memory(); storage.setItem(settingsKey("a"),raw); assert.equal(loadSettings(storage,"a").error,"settingsLoadFailed"); assert.equal(storage.getItem(settingsKey("a")),raw); } });
+test("blocked storage and quota errors are surfaced", () => { const storage={getItem(){throw Error("blocked");},setItem(){throw Error("quota");}}; assert.equal(loadSettings(storage,"a").error,"settingsLoadFailed"); assert.throws(()=>saveSettings(storage,"a",good()),/quota/); });
+test("invalid save never overwrites existing settings", () => { const storage=memory(); saveSettings(storage,"a",good()); assert.throws(()=>saveSettings(storage,"a",{...good(),blocks:[]})); assert.deepEqual(loadSettings(storage,"a").value,validateSettings(good())); });

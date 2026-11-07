@@ -111,3 +111,7 @@ textarea { min-height: 72px; resize: vertical; }
 @media (min-width: 640px) {
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 }
+
+/* Settings controls wrap on small screens. */
+.header-actions { flex-wrap: wrap; justify-content: flex-end; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 10px; }

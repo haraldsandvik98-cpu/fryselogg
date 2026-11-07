@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { I18N, SPECIES } from "./i18n.js";
 import { supabase, supabaseConfigured } from "./supabase.js";
+import FreezerSettings from "./FreezerSettings.jsx";
 
 const LANG_KEY = "fryselogg_lang";
 
@@ -46,8 +47,9 @@ function totalsFor(catches) {
 }
 
 export default function App() {
-  const [lang, setLangState] = useState(() => (localStorage.getItem(LANG_KEY) === "en" ? "en" : "no"));
+  const [lang, setLangState] = useState(() => { try { return localStorage.getItem(LANG_KEY) === "en" ? "en" : "no"; } catch { return "no"; } });
   const [session, setSession] = useState(null);
+  const [settingsUser, setSettingsUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -71,7 +73,7 @@ export default function App() {
   const setLang = (next) => {
     const value = next === "en" ? "en" : "no";
     setLangState(value);
-    localStorage.setItem(LANG_KEY, value);
+    try { localStorage.setItem(LANG_KEY, value); } catch { /* Language remains available for this session. */ }
     document.documentElement.lang = value === "en" ? "en" : "no";
   };
 
@@ -142,6 +144,7 @@ export default function App() {
   };
 
   const logout = async () => {
+    setSettingsUser(null);
     if (!supabase) return;
     await supabase.auth.signOut();
     setTrips([]);
@@ -255,6 +258,7 @@ export default function App() {
             <button type="button" className={lang === "no" ? "active" : ""} onClick={() => setLang("no")}>NO</button>
             <button type="button" className={lang === "en" ? "active" : ""} onClick={() => setLang("en")}>EN</button>
           </div>
+          {session && <button type="button" className="btn btn-ghost" aria-expanded={settingsUser === session.user.id} onClick={() => setSettingsUser(session.user.id)}>{t(lang, "settings")}</button>}
           {session && (
             <button type="button" className="btn btn-ghost" onClick={logout}>{t(lang, "logout")}</button>
           )}
@@ -295,7 +299,9 @@ export default function App() {
         </section>
       )}
 
-      {session && (
+      {session && settingsUser === session.user.id && <FreezerSettings key={session.user.id} userId={session.user.id} lang={lang} onBack={() => setSettingsUser(null)} />}
+
+      {session && settingsUser !== session.user.id && (
         <>
           <section className="card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
