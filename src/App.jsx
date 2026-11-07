@@ -53,6 +53,7 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
+  const [authNotice, setAuthNotice] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [trips, setTrips] = useState([]);
   const [dataError, setDataError] = useState("");
@@ -122,10 +123,22 @@ export default function App() {
     if (!supabase) return;
     setAuthBusy(true);
     setAuthError("");
-    const fn = mode === "signup" ? supabase.auth.signUp : supabase.auth.signInWithPassword;
-    const { error } = await fn({ email: email.trim(), password });
-    if (error) setAuthError(error.message);
-    setAuthBusy(false);
+    setAuthNotice("");
+    try {
+      const credentials = { email: email.trim(), password };
+      const { data, error } = mode === "signup"
+        ? await supabase.auth.signUp(credentials)
+        : await supabase.auth.signInWithPassword(credentials);
+      if (error) {
+        setAuthError(error.message || t(lang, "authFailed"));
+      } else if (mode === "signup" && !data?.session) {
+        setAuthNotice(t(lang, "signupConfirmation"));
+      }
+    } catch (error) {
+      setAuthError(error?.message || t(lang, "authFailed"));
+    } finally {
+      setAuthBusy(false);
+    }
   };
 
   const logout = async () => {
@@ -267,14 +280,15 @@ export default function App() {
               <label htmlFor="password">{t(lang, "labelPassword")}</label>
               <input id="password" type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            {authError && <p className="error">{authError}</p>}
+            {authError && <p className="error" role="alert">{authError}</p>}
+            {authNotice && <p role="status">{authNotice}</p>}
             <button className="btn btn-primary btn-block" type="submit" disabled={authBusy}>
               {t(lang, mode === "signup" ? "signupSubmit" : "loginSubmit")}
             </button>
           </form>
           <p className="hint">
             {t(lang, mode === "signup" ? "haveAccount" : "needAccount")}{" "}
-            <button type="button" className="linkish" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setAuthError(""); }}>
+            <button type="button" className="linkish" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setAuthError(""); setAuthNotice(""); }}>
               {t(lang, mode === "signup" ? "goLogin" : "goSignup")}
             </button>
           </p>
